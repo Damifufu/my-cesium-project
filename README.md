@@ -17,7 +17,18 @@
 
 ## 🧪 功能探索示例
 
-仓库中包含了以下独立的功能验证文件，用于测试和掌握 Cesium 的核心 API：
+仓库中包含了以下独立的功能验证文件，用于测试和掌握 Cesium 的核心 API
+├── examples/                     # 🧪 功能示例合集（独立组件）
+│   ├── 01-020304-基础配置.vue
+│   ├── 07坐标系.vue
+│   ├── 08-09-相机.vue
+│   ├── 10-17物体.vue
+│   ├── 3dtile.vue
+│   ├── 飞机.vue
+│   ├── 动态光影和呼吸灯效果的城市建筑白模.vue
+│   ├── 自定义地图.vue
+│   ├── 实体及其相关设置.vue
+│   └── geojson; kml; czml数据的使用.vue
 
 
 ## 🛠️ 技术栈
@@ -27,34 +38,6 @@
 *   **构建工具：** Vite
 *   **语言：** JavaScript、HTML5、CSS3
 
-## 🚀 本地运行
-
-```bash
-# 1. 克隆项目
-git clone https://github.com/Damifufu/my-cesium-project.git
-cd my-cesium-project
-
-# 2. 安装依赖
-npm install
-
-# 3. 启动开发服务器
-npm run dev
-```
-
-## 📂 项目结构
-
-```
-my-cesium-project/
-├── public/               # 公共静态资源
-├── src/
-│   ├── App.vue           # 🏆 主程序（完整功能演示）
-│   ├── main.js           # 应用入口
-│   └── 其他 *.vue 文件    # 各功能独立示例
-├── index.html
-├── package.json
-├── vite.config.js
-└── README.md
-```
 
 ## 📝 学习记录
 
