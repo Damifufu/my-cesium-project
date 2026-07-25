@@ -1,0 +1,77 @@
+[
+  {
+    "longitude": 116.397428,
+    "latitude": 39.90923,
+    "height": 1000
+  },
+  {
+    "longitude": 116.417428,
+    "latitude": 39.91923,
+    "height": 1200
+  },
+  {
+    "longitude": 116.437428,
+    "latitude": 39.92923,
+    "height": 1500
+  },
+  {
+    "longitude": 116.457428,
+    "latitude": 39.93923,
+    "height": 1800
+  },
+  {
+    "longitude": 116.477428,
+    "latitude": 39.94923,
+    "height": 2000
+  },
+  {
+    "longitude": 116.497428,
+    "latitude": 39.95923,
+    "height": 2200
+  },
+  {
+    "longitude": 116.517428,
+    "latitude": 39.96923,
+    "height": 2500
+  },
+  {
+    "longitude": 116.537428,
+    "latitude": 39.97923,
+    "height": 2800
+  },
+  {
+    "longitude": 116.557428,
+    "latitude": 39.98923,
+    "height": 3000
+  },
+  {
+    "longitude": 116.577428,
+    "latitude": 39.99923,
+    "height": 3200
+  },
+  {
+    "longitude": 116.597428,
+    "latitude": 40.00923,
+    "height": 3500
+  },
+  {
+    "longitude": 116.617428,
+    "latitude": 40.01923,
+    "height": 3800
+  },
+  {
+    "longitude": 116.637428,
+    "latitude": 40.02923,
+    "height": 4000
+  },
+  {
+    "longitude": 116.657428,
+    "latitude": 40.03923,
+    "height": 4200
+  },
+  {
+    "longitude": 116.677428,
+    "latitude": 40.04923,
+    "height": 4500
+  }
+]
