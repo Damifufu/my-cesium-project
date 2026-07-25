@@ -16,7 +16,7 @@
 <script setup>
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
-import { onMounted, ref, onBeforeUnmount } from "vue";
+import { onMounted, ref, onBeforeUnmount, nextTick } from "vue";
 
 const showLoading = ref(true);
 const loadingSubText = ref('初始化场景...');
@@ -27,6 +27,7 @@ let buildingsLoaded = false;
 let terrainCheckInterval = null;
 let loadingTimeout = null;
 let viewer = null;
+let osmBuildings = null;
 
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3YWZiZWZlNS00ZGJkLTRjMTEtOGUxZC02NDk1MDk0OGQ4MDYiLCJpZCI6Mzg2NDg3LCJpYXQiOjE3NzAxOTcxMDF9._zIVRYkKX0_wXhD3UZv63uoqBXvW2zmKvkk-dyIQeYo';
 
@@ -64,12 +65,259 @@ function checkAllLoaded(viewerInstance) {
     }
 }
 
+function initControls() {
+    console.log('🔄 初始化UI控件...');
+    if (!viewer) {
+        console.warn('viewer 未就绪');
+        return;
+    }
+    const container = document.getElementById('cesiumContainer');
+    if (!container) {
+        console.warn('容器未找到');
+        return;
+    }
+
+    
+    // 1. 智能搜索框（顶部居中）
+ 
+    const searchBox = document.createElement('div');
+    searchBox.id = 'searchBox';
+    searchBox.style.cssText = `
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 999;
+        display: flex;
+        gap: 0;
+        background: rgba(0, 0, 0, 0.75);
+        border-radius: 10px;
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.1);
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    `;
+    searchBox.innerHTML = `
+        <input id="searchInput" placeholder="🔍 搜索地名 或 输入坐标 (113.3,23.1)" style="
+            padding: 10px 16px;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 13px;
+            width: 280px;
+            outline: none;
+            font-family: 'Microsoft YaHei', sans-serif;
+        ">
+        <button id="searchBtn" style="
+            padding: 10px 18px;
+            background: #00aaff;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.2s;
+        " onmouseover="this.style.background='#0088dd'" onmouseout="this.style.background='#00aaff'">前往</button>
+    `;
+    container.appendChild(searchBox);
+
+    function handleSearch() {
+        const input = document.getElementById('searchInput').value.trim();
+        if (!input) return;
+        
+        const parts = input.split(',').map(s => parseFloat(s.trim()));
+        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+            viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(parts[0], parts[1], 500),
+                duration: 1.5
+            });
+            return;
+        }
+        
+        loadingSubText.value = `正在搜索 "${input}"...`;
+        fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(input)}&count=1&language=zh`)
+            .then(res => res.json())
+            .then(data => {
+                loadingSubText.value = '搜索完成';
+                if (data.results && data.results.length > 0) {
+                    const result = data.results[0];
+                    viewer.camera.flyTo({
+                        destination: Cesium.Cartesian3.fromDegrees(
+                            result.longitude,
+                            result.latitude,
+                            500
+                        ),
+                        duration: 1.5
+                    });
+                    document.getElementById('searchInput').value = 
+                        `${result.name} (${result.longitude.toFixed(4)}, ${result.latitude.toFixed(4)})`;
+                } else {
+                    alert(`未找到 "${input}"，请尝试输入经纬度，如: 113.3, 23.1`);
+                }
+            })
+            .catch(() => {
+                loadingSubText.value = '搜索失败';
+                alert('搜索失败，请检查网络或输入坐标，如: 113.3, 23.1');
+            });
+    }
+
+    document.getElementById('searchBtn').addEventListener('click', handleSearch);
+    document.getElementById('searchInput').addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    });
+
+  
+    //  右下角按钮组
+   
+    const btnStyle = `
+        padding: 10px 16px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 13px;
+        cursor: pointer;
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.1);
+        transition: all 0.2s;
+        font-family: 'Microsoft YaHei', sans-serif;
+        min-width: 90px;
+        text-align: center;
+    `;
+
+    const btnGroup = document.createElement('div');
+    btnGroup.id = 'btnGroup';
+    btnGroup.style.cssText = `
+        position: absolute;
+        bottom: 30px;
+        right: 20px;
+        z-index: 999;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    `;
+    container.appendChild(btnGroup);
+
+    // 定位
+    const locateBtn = document.createElement('button');
+    locateBtn.innerHTML = '📍 定位';
+    locateBtn.style.cssText = btnStyle;
+    locateBtn.addEventListener('click', () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                viewer.camera.flyTo({
+                    destination: Cesium.Cartesian3.fromDegrees(
+                        pos.coords.longitude,
+                        pos.coords.latitude,
+                        500
+                    ),
+                    duration: 2
+                });
+            }, () => {
+                alert('无法获取位置，请检查权限');
+            });
+        } else {
+            alert('浏览器不支持定位');
+        }
+    });
+    btnGroup.appendChild(locateBtn);
+
+    // 复位
+    const resetBtn = document.createElement('button');
+    resetBtn.innerHTML = '🏠 复位';
+    resetBtn.style.cssText = btnStyle;
+    resetBtn.addEventListener('click', () => {
+        viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(113.3191, 23.100, 1000),
+            orientation: {
+                heading: Cesium.Math.toRadians(0),
+                pitch: Cesium.Math.toRadians(-20),
+                roll: 0,
+            },
+            duration: 1.5
+        });
+    });
+    btnGroup.appendChild(resetBtn);
+
+    // 隐藏建筑
+    let buildingsVisible = true;
+    const toggleBtn = document.createElement('button');
+    toggleBtn.innerHTML = '🏗️ 隐藏建筑';
+    toggleBtn.style.cssText = btnStyle;
+    toggleBtn.addEventListener('click', () => {
+        buildingsVisible = !buildingsVisible;
+        if (osmBuildings) {
+            osmBuildings.show = buildingsVisible;
+        }
+        toggleBtn.innerHTML = buildingsVisible ? '🏗️ 隐藏建筑' : '🏗️ 显示建筑';
+    });
+    btnGroup.appendChild(toggleBtn);
+
+    // 全屏
+    const fullscreenBtn = document.createElement('button');
+    fullscreenBtn.innerHTML = '⛶ 全屏';
+    fullscreenBtn.style.cssText = btnStyle;
+    fullscreenBtn.addEventListener('click', () => {
+        const el = document.getElementById('cesiumContainer');
+        if (el.requestFullscreen) {
+            el.requestFullscreen();
+        } else if (el.webkitRequestFullscreen) {
+            el.webkitRequestFullscreen();
+        }
+    });
+    btnGroup.appendChild(fullscreenBtn);
+
+    
+    //  坐标信息（左下）
+
+    const coordDisplay = document.createElement('div');
+    coordDisplay.id = 'coordDisplay';
+    coordDisplay.style.cssText = `
+        position: absolute;
+        bottom: 30px;
+        left: 20px;
+        z-index: 999;
+        color: rgba(255,255,255,0.8);
+        font-size: 12px;
+        font-family: 'Courier New', monospace;
+        background: rgba(0, 0, 0, 0.5);
+        padding: 6px 14px;
+        border-radius: 6px;
+        backdrop-filter: blur(4px);
+        pointer-events: none;
+        border: 1px solid rgba(255,255,255,0.05);
+    `;
+    container.appendChild(coordDisplay);
+
+    viewer.scene.canvas.addEventListener('mousemove', (e) => {
+        const rect = viewer.scene.canvas.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        
+        const ray = viewer.camera.getPickRay(new Cesium.Cartesian2(
+            (x + 1) / 2 * rect.width,
+            (1 - y) / 2 * rect.height
+        ));
+        const result = viewer.scene.globe.pick(ray, viewer.scene);
+        if (result) {
+            const carto = Cesium.Cartographic.fromCartesian(result);
+            const lon = Cesium.Math.toDegrees(carto.longitude).toFixed(6);
+            const lat = Cesium.Math.toDegrees(carto.latitude).toFixed(6);
+            const height = carto.height.toFixed(1);
+            coordDisplay.textContent = `📍 ${lon}°, ${lat}°  |  海拔: ${height}m`;
+        } else {
+            coordDisplay.textContent = '📍 鼠标移出地球';
+        }
+    });
+
+    console.log('✅ UI控件初始化完成');
+}
+
 onMounted(async () => {
     loadingSubText.value = '正在加载地形...';
     
-    // ============================================================
-    // 1. 创建Viewer
-    // ============================================================
     viewer = new Cesium.Viewer("cesiumContainer", {
         infoBox: true,
         geocoder: false,
@@ -81,7 +329,6 @@ onMounted(async () => {
         timeline: false,
         fullscreenButton: false,
         
-        // 🚀 性能优化
         antialias: false,
         useBrowserRecommendedResolution: true,
         resolutionScale: 0.7,
@@ -98,7 +345,6 @@ onMounted(async () => {
 
     viewer.cesiumWidget.creditContainer.style.display = "none";
 
-    // ---- 额外的渲染优化（安全版） ----
     viewer.scene.requestRenderMode = true;
     viewer.scene.maximumRenderTime = 1000 / 30;
     
@@ -112,7 +358,6 @@ onMounted(async () => {
         viewer.scene.globe.enableLighting = false;
     }
 
-    // 2. 设置相机视角
     viewer.camera.setView({
         destination: Cesium.Cartesian3.fromDegrees(113.3191, 23.100, 1000),
         orientation: {
@@ -122,20 +367,18 @@ onMounted(async () => {
         }
     });
 
-    // 3. 监听地形加载进度
+    await nextTick();
+    initControls();
+
     terrainCheckInterval = setInterval(() => {
         checkAllLoaded(viewer);
     }, 500);
 
-    // ============================================================
-    // 4. 加载OSM建筑
-    // ============================================================
     try {
         loadingSubText.value = '正在加载建筑数据...';
 
-        const osmBuildings = await Cesium.createOsmBuildingsAsync();
+        osmBuildings = await Cesium.createOsmBuildingsAsync();
         
-        // 建筑性能优化
         osmBuildings.maximumScreenSpaceError = 32;
         osmBuildings.maximumMemoryUsage = 256;
         osmBuildings.distanceDisplayCondition = new Cesium.DistanceDisplayCondition(0, 3000);
@@ -194,7 +437,9 @@ onMounted(async () => {
         }, 3000);
     }
 
-   
+    
+    // 点击拾取功能
+    
     const infoWindow = document.createElement('div');
     infoWindow.style.cssText = `
         position: absolute;
@@ -303,6 +548,7 @@ onBeforeUnmount(() => {
     width: 100vw;
     height: 100vh;
     position: relative;
+    overflow: hidden;
 }
 
 #loadingOverlay {
@@ -373,5 +619,13 @@ onBeforeUnmount(() => {
     border-radius: 2px;
     transition: width 0.3s ease;
     width: 0%;
+}
+
+#searchInput::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+[style*="cursor: pointer"]:hover {
+    transform: scale(1.02);
 }
 </style>
