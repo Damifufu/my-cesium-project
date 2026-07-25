@@ -1,18 +1,30 @@
 <!DOCTYPE html>
-<html lang="">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <link rel="icon" href="<%= BASE_URL %>favicon.ico">
-    <title><%= htmlWebpackPlugin.options.title %></title>
-    <script> window.CESIUM_BASE_URL = '/cesium/'</script>
-  </head>
-  <body>
-    <noscript>
-      <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
-    </noscript>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cesium 3D GIS</title>
+    <!-- Cesium CSS (CDN) -->
+    <link rel="stylesheet" href="https://unpkg.com/cesium@1.139.1/Build/Cesium/Widgets/widgets.css">
+    <style>
+        html, body, #app {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
     <div id="app"></div>
-    <!-- built files will be auto injected -->
-  </body>
+    <!-- Cesium JS (CDN) -->
+    <script src="https://unpkg.com/cesium@1.139.1/Build/Cesium/Cesium.js"></script>
+    <script>
+        // 设置 Cesium 基础路径
+        window.CESIUM_BASE_URL = 'https://unpkg.com/cesium@1.139.1/Build/Cesium/';
+        // 设置 Ion Token
+        window.CESIUM_ION_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3YWZiZWZlNS00ZGJkLTRjMTEtOGUxZC02NDk1MDk0OGQ4MDYiLCJpZCI6Mzg2NDg3LCJpYXQiOjE3NzAxOTcxMDF9._zIVRYkKX0_wXhD3UZv63uoqBXvW2zmKvkk-dyIQeYo';
+    </script>
+</body>
 </html>
