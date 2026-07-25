@@ -14,9 +14,16 @@
 </template>
 
 <script setup>
-import * as Cesium from 'cesium';
-import 'cesium/Build/Cesium/Widgets/widgets.css';
+// ============================================================
+// ❌ 删除这两行（改用 CDN）
+// import * as Cesium from 'cesium';
+// import 'cesium/Build/Cesium/Widgets/widgets.css';
+// ============================================================
+
 import { onMounted, ref, onBeforeUnmount, nextTick } from "vue";
+
+// ✅ 从 window 获取 Cesium
+const Cesium = window.Cesium;
 
 const showLoading = ref(true);
 const loadingSubText = ref('初始化场景...');
@@ -29,9 +36,11 @@ let loadingTimeout = null;
 let viewer = null;
 let osmBuildings = null;
 
-Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3YWZiZWZlNS00ZGJkLTRjMTEtOGUxZC02NDk1MDk0OGQ4MDYiLCJpZCI6Mzg2NDg3LCJpYXQiOjE3NzAxOTcxMDF9._zIVRYkKX0_wXhD3UZv63uoqBXvW2zmKvkk-dyIQeYo';
+// ✅ 从 window 获取 Token
+Cesium.Ion.defaultAccessToken = window.CESIUM_ION_TOKEN || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3YWZiZWZlNS00ZGJkLTRjMTEtOGUxZC02NDk1MDk0OGQ4MDYiLCJpZCI6Mzg2NDg3LCJpYXQiOjE3NzAxOTcxMDF9._zIVRYkKX0_wXhD3UZv63uoqBXvW2zmKvkk-dyIQeYo';
 
-window.CESIUM_BASE_URL = "/";
+// ✅ CESIUM_BASE_URL 已在 index.html 中设置
+// window.CESIUM_BASE_URL = "/";
 
 function checkAllLoaded(viewerInstance) {
     if (!viewerInstance || !viewerInstance.scene || !viewerInstance.scene.globe) return;
@@ -77,9 +86,7 @@ function initControls() {
         return;
     }
 
-    
     // 1. 智能搜索框（顶部居中）
- 
     const searchBox = document.createElement('div');
     searchBox.id = 'searchBox';
     searchBox.style.cssText = `
@@ -168,9 +175,7 @@ function initControls() {
         }
     });
 
-  
-    //  右下角按钮组
-   
+    // 右下角按钮组
     const btnStyle = `
         padding: 10px 16px;
         background: rgba(0, 0, 0, 0.7);
@@ -269,9 +274,7 @@ function initControls() {
     });
     btnGroup.appendChild(fullscreenBtn);
 
-    
-    //  坐标信息（左下）
-
+    // 坐标信息（左下）
     const coordDisplay = document.createElement('div');
     coordDisplay.id = 'coordDisplay';
     coordDisplay.style.cssText = `
@@ -316,6 +319,16 @@ function initControls() {
 }
 
 onMounted(async () => {
+    // ✅ 确保 Cesium 已加载
+    if (typeof Cesium === 'undefined') {
+        console.error('❌ Cesium 未加载，请检查网络');
+        loadingSubText.value = 'Cesium 加载失败，请刷新重试';
+        setTimeout(() => {
+            showLoading.value = false;
+        }, 3000);
+        return;
+    }
+
     loadingSubText.value = '正在加载地形...';
     
     viewer = new Cesium.Viewer("cesiumContainer", {
@@ -437,9 +450,7 @@ onMounted(async () => {
         }, 3000);
     }
 
-    
     // 点击拾取功能
-    
     const infoWindow = document.createElement('div');
     infoWindow.style.cssText = `
         position: absolute;
