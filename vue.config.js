@@ -1,10 +1,19 @@
 const { defineConfig } = require('@vue/cli-service')
+const path = require('path');
+const webpack = require('webpack');
 
 module.exports = defineConfig({
   transpileDependencies: true,
-  pages: {
-    index: 'src/main.js',
-    cesiumDemo: 'src/App.js',
-    test: 'src/zdy.js'
+  configureWebpack: {
+    resolve: {
+      alias: {
+        'cesium': path.resolve(__dirname, 'node_modules/cesium')
+      }
+    },
+    plugins: [
+      new webpack.DefinePlugin({
+        CESIUM_BASE_URL: JSON.stringify('/')
+      })
+    ]
   }
 })
