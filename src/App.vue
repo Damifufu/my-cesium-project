@@ -16,7 +16,7 @@
 <script setup>
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
-import { onMounted, ref, onBeforeUnmount } from "vue";
+import { onMounted, ref, onBeforeUnmount, nextTick } from "vue";
 
 const showLoading = ref(true);
 const loadingSubText = ref('初始化场景...');
@@ -64,11 +64,121 @@ function checkAllLoaded(viewerInstance) {
     }
 }
 
+//移动端适配默认信息窗口
+function adaptInfoBox() {
+    if (!viewer) return;
+    
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+                     || window.innerWidth < 768;
+    
+    if (!isMobile) return;
+    
+    // 等待 infoBox 渲染
+    setTimeout(() => {
+        const infoBox = document.querySelector('.cesium-infoBox');
+        if (infoBox) {
+            // 移动端样式适配
+            infoBox.style.cssText = `
+                max-width: 90% !important;
+                max-height: 70% !important;
+                width: auto !important;
+                min-width: 280px !important;
+                border-radius: 12px !important;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+            `;
+            
+            // 适配标题
+            const title = infoBox.querySelector('.cesium-infoBox-title');
+            if (title) {
+                title.style.fontSize = '18px';
+                title.style.padding = '16px 20px 12px';
+            }
+            
+            // 适配内容
+            const content = infoBox.querySelector('.cesium-infoBox-body');
+            if (content) {
+                content.style.fontSize = '15px';
+                content.style.padding = '0 20px 16px';
+                content.style.lineHeight = '1.8';
+            }
+            
+            // 适配关闭按钮
+            const closeBtn = infoBox.querySelector('.cesium-infoBox-close');
+            if (closeBtn) {
+                closeBtn.style.width = '36px';
+                closeBtn.style.height = '36px';
+                closeBtn.style.fontSize = '24px';
+                closeBtn.style.lineHeight = '36px';
+                closeBtn.style.top = '8px';
+                closeBtn.style.right = '8px';
+            }
+            
+            // 适配 iframe
+            const iframe = infoBox.querySelector('iframe');
+            if (iframe) {
+                iframe.style.width = '100%';
+                iframe.style.height = '300px';
+                iframe.style.borderRadius = '8px';
+            }
+        }
+    }, 100);
+    
+    // 监听 infoBox 变化
+    const observer = new MutationObserver(() => {
+        const infoBox = document.querySelector('.cesium-infoBox');
+        if (infoBox && infoBox.style.display !== 'none') {
+            // 移动端样式适配
+            infoBox.style.cssText = `
+                max-width: 90% !important;
+                max-height: 70% !important;
+                width: auto !important;
+                min-width: 280px !important;
+                border-radius: 12px !important;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+            `;
+            
+            const title = infoBox.querySelector('.cesium-infoBox-title');
+            if (title) {
+                title.style.fontSize = '18px';
+                title.style.padding = '16px 20px 12px';
+            }
+            
+            const content = infoBox.querySelector('.cesium-infoBox-body');
+            if (content) {
+                content.style.fontSize = '15px';
+                content.style.padding = '0 20px 16px';
+                content.style.lineHeight = '1.8';
+            }
+            
+            const closeBtn = infoBox.querySelector('.cesium-infoBox-close');
+            if (closeBtn) {
+                closeBtn.style.width = '36px';
+                closeBtn.style.height = '36px';
+                closeBtn.style.fontSize = '24px';
+                closeBtn.style.lineHeight = '36px';
+                closeBtn.style.top = '8px';
+                closeBtn.style.right = '8px';
+            }
+        }
+    });
+    
+    // 监听 infoBox 容器的变化
+    const container = document.querySelector('.cesium-infoBox-container');
+    if (container) {
+        observer.observe(container, {
+            attributes: true,
+            attributeFilter: ['style'],
+            childList: true,
+            subtree: true
+        });
+    }
+}
+
 onMounted(async () => {
     loadingSubText.value = '正在加载地形...';
     
     viewer = new Cesium.Viewer("cesiumContainer", {
-        infoBox: true,
+        infoBox: true,  // 启用默认信息窗口
         geocoder: false,
         homeButton: false,
         sceneModePicker: false,
@@ -183,10 +293,13 @@ onMounted(async () => {
         }, 3000);
     }
 
-    // ---- 信息窗口 - 移动端适配 ----
+    //适配默认信息窗口 
+    await nextTick();
+    adaptInfoBox();
+
+    //自定义信息窗口  移动端适配 
     const infoWindow = document.createElement('div');
     
-    // 检测是否为移动端
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
                      || window.innerWidth < 768;
     
@@ -252,7 +365,6 @@ onMounted(async () => {
                     `;
                     infoWindow.style.display = 'block';
                     
-                    // ---- 移动端适配位置计算 ----
                     const windowWidth = window.innerWidth;
                     const windowHeight = window.innerHeight;
                     const infoWidth = isMobile ? 320 : 280;
@@ -261,16 +373,13 @@ onMounted(async () => {
                     let left = x + 15;
                     let top = y - 10;
                     
-                    // 水平方向适配
                     if (left + infoWidth > windowWidth) {
                         left = x - infoWidth - 15;
                     }
-                    // 如果左边也不够，就居中显示
                     if (left < 10) {
                         left = (windowWidth - infoWidth) / 2;
                     }
                     
-                    // 垂直方向适配
                     if (top < 10) {
                         top = y + 20;
                     }
@@ -281,7 +390,6 @@ onMounted(async () => {
                     infoWindow.style.left = left + 'px';
                     infoWindow.style.top = top + 'px';
                     
-                    // 移动端显示时间更长
                     setTimeout(() => {
                         infoWindow.style.display = 'none';
                     }, isMobile ? 5000 : 4000);
@@ -294,7 +402,6 @@ onMounted(async () => {
         }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-    // ---- 移动端触摸滑动时自动隐藏信息窗口 ----
     if (isMobile) {
         handler.setInputAction(() => {
             infoWindow.style.display = 'none';
@@ -304,6 +411,22 @@ onMounted(async () => {
             infoWindow.style.display = 'none';
         }, Cesium.ScreenSpaceEventType.PAN);
     }
+    
+    // ---- 窗口大小变化时重新适配 ----
+    window.addEventListener('resize', () => {
+        const isMobileNow = window.innerWidth < 768;
+        const infoBox = document.querySelector('.cesium-infoBox');
+        if (infoBox && isMobileNow) {
+            infoBox.style.cssText = `
+                max-width: 90% !important;
+                max-height: 70% !important;
+                width: auto !important;
+                min-width: 280px !important;
+                border-radius: 12px !important;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+            `;
+        }
+    });
 });
 
 onBeforeUnmount(() => {
@@ -403,11 +526,43 @@ onBeforeUnmount(() => {
     width: 0%;
 }
 
-/* 移动端信息窗口样式优化 */
 @media (max-width: 768px) {
     .cesium-infoBox {
         max-width: 90% !important;
-        max-height: 60% !important;
+        max-height: 70% !important;
+        width: auto !important;
+        min-width: 280px !important;
+        border-radius: 12px !important;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
+    }
+    
+    .cesium-infoBox-title {
+        font-size: 18px !important;
+        padding: 16px 20px 12px !important;
+    }
+    
+    .cesium-infoBox-body {
+        font-size: 15px !important;
+        padding: 0 20px 16px !important;
+        line-height: 1.8 !important;
+    }
+    
+    .cesium-infoBox-close {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 24px !important;
+        line-height: 36px !important;
+        top: 8px !important;
+        right: 8px !important;
+    }
+    
+    .cesium-infoBox iframe {
+        width: 100% !important;
+        height: 300px !important;
+        border-radius: 8px !important;
     }
 }
 </style>
