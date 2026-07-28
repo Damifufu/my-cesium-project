@@ -67,7 +67,6 @@ function checkAllLoaded(viewerInstance) {
 onMounted(async () => {
     loadingSubText.value = '正在加载地形...';
     
-    
     viewer = new Cesium.Viewer("cesiumContainer", {
         infoBox: true,
         geocoder: false,
@@ -79,7 +78,6 @@ onMounted(async () => {
         timeline: false,
         fullscreenButton: false,
         
-        // 性能优化
         antialias: false,
         useBrowserRecommendedResolution: true,
         resolutionScale: 0.7,
@@ -96,7 +94,6 @@ onMounted(async () => {
 
     viewer.cesiumWidget.creditContainer.style.display = "none";
 
-    // ---- 额外的渲染优化
     viewer.scene.requestRenderMode = true;
     viewer.scene.maximumRenderTime = 1000 / 30;
     
@@ -110,7 +107,6 @@ onMounted(async () => {
         viewer.scene.globe.enableLighting = false;
     }
 
-    // 2. 设置相机视角
     viewer.camera.setView({
         destination: Cesium.Cartesian3.fromDegrees(113.3191, 23.100, 1000),
         orientation: {
@@ -120,18 +116,15 @@ onMounted(async () => {
         }
     });
 
-    // 3. 监听地形加载进度
     terrainCheckInterval = setInterval(() => {
         checkAllLoaded(viewer);
     }, 500);
 
-    
     try {
         loadingSubText.value = '正在加载建筑数据...';
 
         const osmBuildings = await Cesium.createOsmBuildingsAsync();
         
-        // 建筑性能优化
         osmBuildings.maximumScreenSpaceError = 32;
         osmBuildings.maximumMemoryUsage = 256;
         osmBuildings.distanceDisplayCondition = new Cesium.DistanceDisplayCondition(0, 3000);
@@ -190,23 +183,29 @@ onMounted(async () => {
         }, 3000);
     }
 
-   
+    // ---- 信息窗口 - 移动端适配 ----
     const infoWindow = document.createElement('div');
+    
+    // 检测是否为移动端
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+                     || window.innerWidth < 768;
+    
     infoWindow.style.cssText = `
         position: absolute;
         background: rgba(0, 0, 0, 0.85);
         color: white;
-        padding: 12px 16px;
-        border-radius: 8px;
+        padding: ${isMobile ? '16px 20px' : '12px 16px'};
+        border-radius: ${isMobile ? '12px' : '8px'};
         border-left: 4px solid #00aaff;
         font-family: 'Microsoft YaHei', sans-serif;
-        font-size: 14px;
+        font-size: ${isMobile ? '16px' : '14px'};
         pointer-events: none;
         z-index: 1000;
-        max-width: 280px;
+        max-width: ${isMobile ? '320px' : '280px'};
         backdrop-filter: blur(8px);
         display: none;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        box-shadow: ${isMobile ? '0 4px 20px rgba(0,0,0,0.4)' : '0 2px 10px rgba(0,0,0,0.3)'};
+        touch-action: none;
     `;
     document.body.appendChild(infoWindow);
 
@@ -245,7 +244,7 @@ onMounted(async () => {
                     
                     infoWindow.innerHTML = `
                         <div style="font-weight:bold; margin-bottom:8px; color:#00aaff;">📋 建筑信息</div>
-                        <div style="font-size:12px; line-height:1.6;">
+                        <div style="font-size:${isMobile ? '14px' : '12px'}; line-height:${isMobile ? '1.8' : '1.6'};">
                             <div><span style="color:#aaa;">🏢 名称：</span>${nameZh}</div>
                             <div><span style="color:#aaa;">📏 高度：</span>${height} 米</div>
                             <div><span style="color:#aaa;">📚 楼层：</span>${levels} 层</div>
@@ -253,17 +252,39 @@ onMounted(async () => {
                     `;
                     infoWindow.style.display = 'block';
                     
+                    // ---- 移动端适配位置计算 ----
+                    const windowWidth = window.innerWidth;
+                    const windowHeight = window.innerHeight;
+                    const infoWidth = isMobile ? 320 : 280;
+                    const infoHeight = isMobile ? 160 : 130;
+                    
                     let left = x + 15;
                     let top = y - 10;
-                    if (left + 280 > window.innerWidth) left = x - 290;
-                    if (top < 0) top = y + 20;
+                    
+                    // 水平方向适配
+                    if (left + infoWidth > windowWidth) {
+                        left = x - infoWidth - 15;
+                    }
+                    // 如果左边也不够，就居中显示
+                    if (left < 10) {
+                        left = (windowWidth - infoWidth) / 2;
+                    }
+                    
+                    // 垂直方向适配
+                    if (top < 10) {
+                        top = y + 20;
+                    }
+                    if (top + infoHeight > windowHeight - 10) {
+                        top = windowHeight - infoHeight - 10;
+                    }
                     
                     infoWindow.style.left = left + 'px';
                     infoWindow.style.top = top + 'px';
                     
+                    // 移动端显示时间更长
                     setTimeout(() => {
                         infoWindow.style.display = 'none';
-                    }, 4000);
+                    }, isMobile ? 5000 : 4000);
                 }
             } catch (e) {
                 console.error('获取属性失败:', e);
@@ -272,6 +293,17 @@ onMounted(async () => {
             infoWindow.style.display = 'none';
         }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+    // ---- 移动端触摸滑动时自动隐藏信息窗口 ----
+    if (isMobile) {
+        handler.setInputAction(() => {
+            infoWindow.style.display = 'none';
+        }, Cesium.ScreenSpaceEventType.PINCH_START);
+        
+        handler.setInputAction(() => {
+            infoWindow.style.display = 'none';
+        }, Cesium.ScreenSpaceEventType.PAN);
+    }
 });
 
 onBeforeUnmount(() => {
@@ -369,5 +401,13 @@ onBeforeUnmount(() => {
     border-radius: 2px;
     transition: width 0.3s ease;
     width: 0%;
+}
+
+/* 移动端信息窗口样式优化 */
+@media (max-width: 768px) {
+    .cesium-infoBox {
+        max-width: 90% !important;
+        max-height: 60% !important;
+    }
 }
 </style>
