@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build"
+    "build": "node --max_old_space_size=4096 ./node_modules/.bin/vue-cli-service build --mode production",
+    "vercel-build": "npm run build"
   },
   "dependencies": {
+    "cesium": "^1.113.0",
     "core-js": "^3.8.3",
     "vue": "^3.2.13"
   },
