@@ -14,15 +14,10 @@
 </template>
 
 <script setup>
-// ============================================================
-// ❌ 删除这两行（改用 CDN）
-// import * as Cesium from 'cesium';
-// import 'cesium/Build/Cesium/Widgets/widgets.css';
-// ============================================================
 
 import { onMounted, ref, onBeforeUnmount, nextTick } from "vue";
 
-// ✅ 从 window 获取 Cesium
+//  从 window 获取 Cesium
 const Cesium = window.Cesium;
 
 const showLoading = ref(true);
@@ -36,10 +31,10 @@ let loadingTimeout = null;
 let viewer = null;
 let osmBuildings = null;
 
-// ✅ 从 window 获取 Token
+// 从 window 获取 Token
 Cesium.Ion.defaultAccessToken = window.CESIUM_ION_TOKEN || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3YWZiZWZlNS00ZGJkLTRjMTEtOGUxZC02NDk1MDk0OGQ4MDYiLCJpZCI6Mzg2NDg3LCJpYXQiOjE3NzAxOTcxMDF9._zIVRYkKX0_wXhD3UZv63uoqBXvW2zmKvkk-dyIQeYo';
 
-// ✅ CESIUM_BASE_URL 已在 index.html 中设置
+// CESIUM_BASE_URL 已在 index.html 中设置
 // window.CESIUM_BASE_URL = "/";
 
 function checkAllLoaded(viewerInstance) {
