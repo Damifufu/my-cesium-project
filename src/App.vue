@@ -64,7 +64,7 @@ function checkAllLoaded(viewerInstance) {
     }
 }
 
-//移动端适配默认信息窗口
+// 移动端适配默认信息窗口
 function adaptInfoBox() {
     if (!viewer) return;
     
@@ -77,92 +77,112 @@ function adaptInfoBox() {
     setTimeout(() => {
         const infoBox = document.querySelector('.cesium-infoBox');
         if (infoBox) {
-            // 移动端样式适配
+            // 移动端样式适配 - 右上角显示，内容完全可见
             infoBox.style.cssText = `
-                max-width: 90% !important;
-                max-height: 70% !important;
+                max-width: 70% !important;
+                max-height: none !important;
+                height: auto !important;
                 width: auto !important;
-                min-width: 280px !important;
-                border-radius: 12px !important;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+                min-width: 180px !important;
+                border-radius: 10px !important;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+                top: 12px !important;
+                right: 12px !important;
+                left: auto !important;
+                bottom: auto !important;
+                transform: none !important;
+                overflow: visible !important;
             `;
             
-            // 适配标题
+            // 适配标题字体减小
             const title = infoBox.querySelector('.cesium-infoBox-title');
             if (title) {
-                title.style.fontSize = '18px';
-                title.style.padding = '16px 20px 12px';
+                title.style.fontSize = '13px';
+                title.style.padding = '8px 12px 6px';
+                title.style.fontWeight = '600';
             }
             
-            // 适配内容
+            // 适配内容字体减小，完全可见
             const content = infoBox.querySelector('.cesium-infoBox-body');
             if (content) {
-                content.style.fontSize = '15px';
-                content.style.padding = '0 20px 16px';
-                content.style.lineHeight = '1.8';
+                content.style.fontSize = '11px';
+                content.style.padding = '0 12px 10px';
+                content.style.lineHeight = '1.5';
+                content.style.maxHeight = 'none';
+                content.style.overflow = 'visible';
+                content.style.height = 'auto';
             }
             
-            // 适配关闭按钮
+            // 适配关闭按钮缩小
             const closeBtn = infoBox.querySelector('.cesium-infoBox-close');
             if (closeBtn) {
-                closeBtn.style.width = '36px';
-                closeBtn.style.height = '36px';
-                closeBtn.style.fontSize = '24px';
-                closeBtn.style.lineHeight = '36px';
-                closeBtn.style.top = '8px';
-                closeBtn.style.right = '8px';
+                closeBtn.style.width = '24px';
+                closeBtn.style.height = '24px';
+                closeBtn.style.fontSize = '16px';
+                closeBtn.style.lineHeight = '24px';
+                closeBtn.style.top = '4px';
+                closeBtn.style.right = '4px';
             }
             
             // 适配 iframe
             const iframe = infoBox.querySelector('iframe');
             if (iframe) {
                 iframe.style.width = '100%';
-                iframe.style.height = '300px';
-                iframe.style.borderRadius = '8px';
+                iframe.style.height = '150px';
+                iframe.style.borderRadius = '6px';
             }
         }
     }, 100);
     
-    // 监听 infoBox 变化
+    // 监听 infoBox 变化每次打开时重新适配
     const observer = new MutationObserver(() => {
         const infoBox = document.querySelector('.cesium-infoBox');
         if (infoBox && infoBox.style.display !== 'none') {
-            // 移动端样式适配
             infoBox.style.cssText = `
-                max-width: 90% !important;
-                max-height: 70% !important;
+                max-width: 70% !important;
+                max-height: none !important;
+                height: auto !important;
                 width: auto !important;
-                min-width: 280px !important;
-                border-radius: 12px !important;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+                min-width: 180px !important;
+                border-radius: 10px !important;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+                top: 12px !important;
+                right: 12px !important;
+                left: auto !important;
+                bottom: auto !important;
+                transform: none !important;
+                overflow: visible !important;
             `;
             
             const title = infoBox.querySelector('.cesium-infoBox-title');
             if (title) {
-                title.style.fontSize = '18px';
-                title.style.padding = '16px 20px 12px';
+                title.style.fontSize = '13px';
+                title.style.padding = '8px 12px 6px';
+                title.style.fontWeight = '600';
             }
             
             const content = infoBox.querySelector('.cesium-infoBox-body');
             if (content) {
-                content.style.fontSize = '15px';
-                content.style.padding = '0 20px 16px';
-                content.style.lineHeight = '1.8';
+                content.style.fontSize = '11px';
+                content.style.padding = '0 12px 10px';
+                content.style.lineHeight = '1.5';
+                content.style.maxHeight = 'none';
+                content.style.overflow = 'visible';
+                content.style.height = 'auto';
             }
             
             const closeBtn = infoBox.querySelector('.cesium-infoBox-close');
             if (closeBtn) {
-                closeBtn.style.width = '36px';
-                closeBtn.style.height = '36px';
-                closeBtn.style.fontSize = '24px';
-                closeBtn.style.lineHeight = '36px';
-                closeBtn.style.top = '8px';
-                closeBtn.style.right = '8px';
+                closeBtn.style.width = '24px';
+                closeBtn.style.height = '24px';
+                closeBtn.style.fontSize = '16px';
+                closeBtn.style.lineHeight = '24px';
+                closeBtn.style.top = '4px';
+                closeBtn.style.right = '4px';
             }
         }
     });
     
-    // 监听 infoBox 容器的变化
     const container = document.querySelector('.cesium-infoBox-container');
     if (container) {
         observer.observe(container, {
@@ -178,7 +198,7 @@ onMounted(async () => {
     loadingSubText.value = '正在加载地形...';
     
     viewer = new Cesium.Viewer("cesiumContainer", {
-        infoBox: true,  // 启用默认信息窗口
+        infoBox: true,
         geocoder: false,
         homeButton: false,
         sceneModePicker: false,
@@ -293,32 +313,40 @@ onMounted(async () => {
         }, 3000);
     }
 
-    //适配默认信息窗口 
     await nextTick();
     adaptInfoBox();
 
-    //自定义信息窗口  移动端适配 
+    //  自定义信息窗口
     const infoWindow = document.createElement('div');
     
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
                      || window.innerWidth < 768;
     
     infoWindow.style.cssText = `
-        position: absolute;
-        background: rgba(0, 0, 0, 0.85);
+        position: fixed;
+        background: rgba(0, 0, 0, 0.88);
         color: white;
-        padding: ${isMobile ? '16px 20px' : '12px 16px'};
-        border-radius: ${isMobile ? '12px' : '8px'};
-        border-left: 4px solid #00aaff;
+        padding: ${isMobile ? '8px 12px' : '12px 16px'};
+        border-radius: ${isMobile ? '10px' : '8px'};
+        border-left: 3px solid #00aaff;
         font-family: 'Microsoft YaHei', sans-serif;
-        font-size: ${isMobile ? '16px' : '14px'};
+        font-size: ${isMobile ? '11px' : '14px'};
         pointer-events: none;
         z-index: 1000;
-        max-width: ${isMobile ? '320px' : '280px'};
+        max-width: ${isMobile ? '65%' : '280px'};
+        width: auto;
+        height: auto;
+        max-height: none;
+        overflow: visible;
         backdrop-filter: blur(8px);
         display: none;
-        box-shadow: ${isMobile ? '0 4px 20px rgba(0,0,0,0.4)' : '0 2px 10px rgba(0,0,0,0.3)'};
+        box-shadow: 0 4px 16px rgba(0,0,0,0.35);
         touch-action: none;
+        top: 12px;
+        right: 12px;
+        left: auto;
+        bottom: auto;
+        line-height: 1.4;
     `;
     document.body.appendChild(infoWindow);
 
@@ -356,8 +384,8 @@ onMounted(async () => {
                     const levels = feature.getProperty('building:levels') || '?';
                     
                     infoWindow.innerHTML = `
-                        <div style="font-weight:bold; margin-bottom:8px; color:#00aaff;">📋 建筑信息</div>
-                        <div style="font-size:${isMobile ? '14px' : '12px'}; line-height:${isMobile ? '1.8' : '1.6'};">
+                        <div style="font-weight:600; margin-bottom:4px; color:#00aaff; font-size:${isMobile ? '12px' : '14px'};">📋 建筑信息</div>
+                        <div style="font-size:${isMobile ? '10px' : '12px'}; line-height:1.5;">
                             <div><span style="color:#aaa;">🏢 名称：</span>${nameZh}</div>
                             <div><span style="color:#aaa;">📏 高度：</span>${height} 米</div>
                             <div><span style="color:#aaa;">📚 楼层：</span>${levels} 层</div>
@@ -365,34 +393,15 @@ onMounted(async () => {
                     `;
                     infoWindow.style.display = 'block';
                     
-                    const windowWidth = window.innerWidth;
-                    const windowHeight = window.innerHeight;
-                    const infoWidth = isMobile ? 320 : 280;
-                    const infoHeight = isMobile ? 160 : 130;
-                    
-                    let left = x + 15;
-                    let top = y - 10;
-                    
-                    if (left + infoWidth > windowWidth) {
-                        left = x - infoWidth - 15;
-                    }
-                    if (left < 10) {
-                        left = (windowWidth - infoWidth) / 2;
-                    }
-                    
-                    if (top < 10) {
-                        top = y + 20;
-                    }
-                    if (top + infoHeight > windowHeight - 10) {
-                        top = windowHeight - infoHeight - 10;
-                    }
-                    
-                    infoWindow.style.left = left + 'px';
-                    infoWindow.style.top = top + 'px';
+                    // 右上角固定位置
+                    infoWindow.style.top = '12px';
+                    infoWindow.style.right = '12px';
+                    infoWindow.style.left = 'auto';
+                    infoWindow.style.bottom = 'auto';
                     
                     setTimeout(() => {
                         infoWindow.style.display = 'none';
-                    }, isMobile ? 5000 : 4000);
+                    }, 4000);
                 }
             } catch (e) {
                 console.error('获取属性失败:', e);
@@ -412,18 +421,24 @@ onMounted(async () => {
         }, Cesium.ScreenSpaceEventType.PAN);
     }
     
-    // ---- 窗口大小变化时重新适配 ----
     window.addEventListener('resize', () => {
         const isMobileNow = window.innerWidth < 768;
         const infoBox = document.querySelector('.cesium-infoBox');
         if (infoBox && isMobileNow) {
             infoBox.style.cssText = `
-                max-width: 90% !important;
-                max-height: 70% !important;
+                max-width: 70% !important;
+                max-height: none !important;
+                height: auto !important;
                 width: auto !important;
-                min-width: 280px !important;
-                border-radius: 12px !important;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+                min-width: 180px !important;
+                border-radius: 10px !important;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+                top: 12px !important;
+                right: 12px !important;
+                left: auto !important;
+                bottom: auto !important;
+                transform: none !important;
+                overflow: visible !important;
             `;
         }
     });
@@ -526,43 +541,52 @@ onBeforeUnmount(() => {
     width: 0%;
 }
 
+/*  移动端默认信息窗口右上角显示，内容完全可见  */
 @media (max-width: 768px) {
     .cesium-infoBox {
-        max-width: 90% !important;
-        max-height: 70% !important;
+        max-width: 70% !important;
+        max-height: none !important;
+        height: auto !important;
         width: auto !important;
-        min-width: 280px !important;
-        border-radius: 12px !important;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
-        left: 50% !important;
-        top: 50% !important;
-        transform: translate(-50%, -50%) !important;
+        min-width: 180px !important;
+        border-radius: 10px !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+        top: 12px !important;
+        right: 12px !important;
+        left: auto !important;
+        bottom: auto !important;
+        transform: none !important;
+        overflow: visible !important;
     }
     
     .cesium-infoBox-title {
-        font-size: 18px !important;
-        padding: 16px 20px 12px !important;
+        font-size: 13px !important;
+        padding: 8px 12px 6px !important;
+        font-weight: 600 !important;
     }
     
     .cesium-infoBox-body {
-        font-size: 15px !important;
-        padding: 0 20px 16px !important;
-        line-height: 1.8 !important;
+        font-size: 11px !important;
+        padding: 0 12px 10px !important;
+        line-height: 1.5 !important;
+        max-height: none !important;
+        overflow: visible !important;
+        height: auto !important;
     }
     
     .cesium-infoBox-close {
-        width: 36px !important;
-        height: 36px !important;
-        font-size: 24px !important;
-        line-height: 36px !important;
-        top: 8px !important;
-        right: 8px !important;
+        width: 24px !important;
+        height: 24px !important;
+        font-size: 16px !important;
+        line-height: 24px !important;
+        top: 4px !important;
+        right: 4px !important;
     }
     
     .cesium-infoBox iframe {
         width: 100% !important;
-        height: 300px !important;
-        border-radius: 8px !important;
+        height: 150px !important;
+        border-radius: 6px !important;
     }
 }
 </style>
